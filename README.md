@@ -24,11 +24,11 @@ This script allows you to create and manage multiple profiles and proxies. It pr
 
     python antidetect.py
 
-![Script start message](https://imgur.com/a/GFYzJOx)
+![Script start message](https://i.imgur.com/1zc4GI1.png)
 
 ## Tables displayed information
 
-![Profiles table](https://imgur.com/a/boHwTa0)
+![Profiles table](https://i.imgur.com/eHDgS8l.png)
 
     ID - profile id.
     Name - profile name.
@@ -36,7 +36,7 @@ This script allows you to create and manage multiple profiles and proxies. It pr
     Proxy - proxy ID, related to proxies table.
     Description - profile description.
 
-![Proxies table](https://imgur.com/a/QWeundI)
+![Proxies table](https://i.imgur.com/Na06std.png)
 
     ID - proxy id.
     Country - proxy country.
