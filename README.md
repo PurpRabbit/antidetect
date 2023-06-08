@@ -16,9 +16,9 @@ This script allows you to create and manage multiple profiles and proxies. It pr
 
 ### Getting Started
 
-1. Create new folder and navigate to it.
-2. Clone the repository.
-3. Install required dependencies.
+1. Clone the repository.
+2. Navigate to the project directory.
+3. Install the dependencies.
 
 ## Usage
 
