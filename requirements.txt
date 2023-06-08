@@ -1,0 +1,7 @@
+SQLAlchemy==2.0.15
+selenium==4.8.2
+requests==2.28.2
+prettytable==3.7.0
+geoip2==4.7.0
+colorama==0.4.6
+art==5.9
