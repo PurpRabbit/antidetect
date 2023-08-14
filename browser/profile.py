@@ -1,8 +1,10 @@
 import time
 import threading
 import random
+
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
+from selenium.common import exceptions
 
 from browser.proxy import Proxy
 from utils.paths import PROFILES_DIR
@@ -23,7 +25,7 @@ class Profile:
         self.name = name
         self.user_agent = user_agent
         self._proxy = proxy
-        self.thread_running = threading.Event()
+        self.thread_running = None
 
         self.options = webdriver.ChromeOptions()
 
@@ -44,18 +46,19 @@ class Profile:
         """Start running the profile in a separate thread."""
         self.browser = webdriver.Chrome(service=self.service, options=self.options)
 
-        self.thread_running.set()
-        while self.thread_running.is_set():
+        self.thread_running = True
+        while self.thread_running:
             log = self.browser.get_log('driver')
             if not log:
-                time.sleep(1)
                 continue
             if log[-1]["message"] == BROWSER_CLOSE_MESSAGE:
-                self.thread_running.clear()
-        self.browser.quit()
+                self.thread_running = False
+                self.stop(forced=True)
+    
 
-    def stop(self):
+    def stop(self, forced: bool = False):
         """Stop the running profile."""
-        self.browser.close()
+        if not forced:
+            self.thread_running = False
+            self.browser.close()
         self.browser.quit()
-        self.thread_running.clear()

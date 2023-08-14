@@ -1,0 +1,39 @@
+QTableWidget {
+    border: 5px solid black;
+    background-color: #1e1e1e;
+    font-weight: bold;
+}
+
+QTableWidgetItem {
+    font-family: Arial;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+QHeaderView::section {
+    color: gray;
+    border: none;
+    background-color: #1e1e1e;
+    font-family: Tahoma;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+QPushButton {
+    color: green;
+    border: 2px solid green;
+    border-radius: 10px;
+    font-family: Arial;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    color: white;
+    background-color: green;
+}
+
+QPushButton:pressed {
+    border-style: inset;
+    border-width: 1px;
+    background-color: #82e082;
+}

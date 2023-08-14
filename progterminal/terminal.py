@@ -170,7 +170,7 @@ class Terminal(cmd.Cmd):
         """Stop a running profile."""
         try:
             self.profile_factory.stop_profile(name)
-        except ProfileIsNotRunning as ex:
+        except (ProfileIsNotRunning, ProfileDoesNotExist) as ex:
             error_message(ex)
 
     def _show_profiles_list(self):

@@ -5,12 +5,12 @@ from database.models import ProfileModel, ProxyModel, Base
 
 
 class SqlDatabase:
-    def __init__(self):
+    def __init__(self, db_name):
         """
         Initializes the SqlDatabase class by creating a database connection and session.
 
         """
-        engine = create_engine('sqlite:///database.db')
+        engine = create_engine(f'sqlite:///{db_name}')
         Session = sessionmaker(bind=engine)
         self.session = Session()
 

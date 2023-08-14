@@ -18,7 +18,7 @@ from progterminal.customize import success_message, error_message
 class ProfileFactory:
     def __init__(self) -> None:
         """Initialize the ProfileFactory class."""
-        self.database = SqlDatabase()
+        self.database = SqlDatabase(db_name='database.db')
         self.running_profiles: dict[str, Profile] = dict()
 
     def validate_proxies(self):
@@ -145,7 +145,7 @@ class ProfileFactory:
         profile = self.running_profiles.pop(name, None)
         if not profile:
             raise ProfileIsNotRunning('profile is not active')
-        thread = Thread(target=profile.stop)
+        thread = Thread(target=profile.stop, daemon=True)
         thread.start()
 
     @profile_exist_required
@@ -172,9 +172,9 @@ class ProfileFactory:
             proxy=Proxy(proxy_model.server) if proxy_model else None
         )
 
-        thread = Thread(target=profile.run)
-        self.running_profiles[name] = profile
+        thread= Thread(target=profile.run, daemon=True)
         thread.start()
+        self.running_profiles[name] = profile
         return profile
 
     def profile_is_running(self, name: str) -> bool:
@@ -186,7 +186,7 @@ class ProfileFactory:
         Returns:
             bool: True if the profile is running, False otherwise.
         """
-        if name in self.running_profiles and not self.running_profiles[name].thread_running.is_set():
+        if name in self.running_profiles and not self.running_profiles[name].thread_running:
             self.running_profiles.pop(name)
         return name in self.running_profiles
 
