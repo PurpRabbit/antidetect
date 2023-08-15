@@ -1,0 +1,18 @@
+QPushButton {
+    color: green;
+    border: 2px solid green;
+    border-radius: 10px;
+    font-family: Arial;
+    font-weight: bold;
+}
+
+QPushButton:hover {
+    color: white;
+    background-color: green;
+}
+
+QPushButton:pressed {
+    border-style: inset;
+    border-width: 1px;
+    background-color: #82e082;
+}

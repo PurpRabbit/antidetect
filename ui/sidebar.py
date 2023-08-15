@@ -24,7 +24,7 @@ class SideBarButton(QPushButton):
 
 
 class Sidebar(QVBoxLayout):
-    def __init__(self, parent: QWidget | None = ..., *args, **kwargs):
+    def __init__(self, parent: QWidget | None = None, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
         # Create sidebar buttons
