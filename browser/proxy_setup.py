@@ -19,6 +19,7 @@ manifest_json = """
 }
 """
 
+
 def get_background_js(user: str, password: str, host: str, port: int):
     background_js = """
     var config = {
@@ -49,6 +50,11 @@ def get_background_js(user: str, password: str, host: str, port: int):
                 {urls: ["<all_urls>"]},
                 ['blocking']
     );
-    """ % (host, port, user, password)
+    """ % (
+        host,
+        port,
+        user,
+        password,
+    )
 
     return background_js

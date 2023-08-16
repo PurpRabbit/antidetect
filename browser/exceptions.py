@@ -20,12 +20,12 @@ class ProxyDoesNotExist(Exception):
 
 class ProfileIsRunning(Exception):
     def __init__(self, message: str) -> None:
-            self.message = message
+        self.message = message
 
 
 class ProfileIsNotRunning(Exception):
     def __init__(self, message: str) -> None:
-            self.message = message
+        self.message = message
 
 
 class ProxyExist(Exception):

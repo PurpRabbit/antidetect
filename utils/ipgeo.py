@@ -5,7 +5,7 @@ from utils.paths import BASE_DIR
 
 
 def get_country_from_ip(ip_address):
-    reader = Reader(BASE_DIR + '\\utils\\GeoLite2-Country.mmdb')
+    reader = Reader(BASE_DIR + "\\utils\\GeoLite2-Country.mmdb")
 
     try:
         response = reader.country(ip_address)

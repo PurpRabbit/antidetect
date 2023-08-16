@@ -10,7 +10,7 @@ class SqlDatabase:
         Initializes the SqlDatabase class by creating a database connection and session.
 
         """
-        engine = create_engine(f'sqlite:///{db_name}')
+        engine = create_engine(f"sqlite:///{db_name}")
         Session = sessionmaker(bind=engine)
         self.session = Session()
 
@@ -40,7 +40,28 @@ class SqlDatabase:
         query = select(ProfileModel).where(ProfileModel.name == name)
         return self.session.execute(query).first()[0]
 
-    def create_profile(self, name: str, user_agent: str, proxy_id: int = None, description: str = None) -> None:
+    def update_profile_status(self, name: str, status: str) -> None:
+        """
+        Update profile status
+
+        Args:
+            name (str): Name of the profile.
+            status (str): New profile status.
+        """
+        query = (
+            update(ProfileModel).where(ProfileModel.name == name).values(status=status)
+        )
+        self.session.execute(query)
+        self.session.commit()
+
+    def create_profile(
+        self,
+        name: str,
+        user_agent: str,
+        proxy_id: int = None,
+        note: str = None,
+        status: str = None,
+    ) -> None:
         """
         Creates a new profile record in the database.
 
@@ -48,10 +69,16 @@ class SqlDatabase:
             name (str): Name of the profile.
             user_agent (str): User agent string for the profile.
             proxy_id (int, optional): ID of the associated proxy. Defaults to None.
-            description (str, optional): Description of the profile. Defaults to None.
+            notes (str, optional): Description of the profile. Defaults to None.
 
         """
-        new_profile = ProfileModel(name=name, user_agent=user_agent, proxy_id=proxy_id, description=description)
+        new_profile = ProfileModel(
+            name=name,
+            user_agent=user_agent,
+            proxy_id=proxy_id,
+            note=note,
+            status=status,
+        )
         self.session.add(new_profile)
         self.session.commit()
 
@@ -64,7 +91,11 @@ class SqlDatabase:
             is_valid (bool): Validity status of the proxy.
 
         """
-        query = update(ProxyModel).where(ProxyModel.server == server).values(is_valid=is_valid)
+        query = (
+            update(ProxyModel)
+            .where(ProxyModel.server == server)
+            .values(is_valid=is_valid)
+        )
         self.session.execute(query)
         self.session.commit()
 
@@ -119,11 +150,15 @@ class SqlDatabase:
             proxy_id (int): ID of the new proxy.
 
         """
-        query = update(ProfileModel).where(ProfileModel.name == name).values(proxy_id=proxy_id)
+        query = (
+            update(ProfileModel)
+            .where(ProfileModel.name == name)
+            .values(proxy_id=proxy_id)
+        )
         self.session.execute(query)
         self.session.commit()
 
-    def change_profile_description(self, name: str, description: str) -> None:
+    def change_profile_note(self, name: str, note: str) -> None:
         """
         Changes the description of a specific profile.
 
@@ -132,7 +167,11 @@ class SqlDatabase:
             description (str): New description for the profile.
 
         """
-        query = update(ProfileModel).where(ProfileModel.name == name).values(description=description)
+        query = (
+            update(ProfileModel)
+            .where(ProfileModel.name == name)
+            .values(note=note)
+        )
         self.session.execute(query)
         self.session.commit()
 

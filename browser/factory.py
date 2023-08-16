@@ -4,8 +4,14 @@ import random
 from threading import Thread
 
 from browser.exceptions import (
-    ProfileExists, ProfileDoesNotExist, ProfileIsRunning, ProxyDoesNotExist, 
-    ProfileIsNotRunning, ProxyExist, InvalidProxyFormat)
+    ProfileExists,
+    ProfileDoesNotExist,
+    ProfileIsRunning,
+    ProxyDoesNotExist,
+    ProfileIsNotRunning,
+    ProxyExist,
+    InvalidProxyFormat,
+)
 from utils.paths import PROFILES_DIR, BASE_DIR
 from utils.ipgeo import get_country_from_ip
 from browser.user_agent import user_agents
@@ -18,7 +24,7 @@ from progterminal.customize import success_message, error_message
 class ProfileFactory:
     def __init__(self) -> None:
         """Initialize the ProfileFactory class."""
-        self.database = SqlDatabase(db_name='database.db')
+        self.database = SqlDatabase(db_name="database.db")
         self.running_profiles: dict[str, Profile] = dict()
 
     def validate_proxies(self):
@@ -51,9 +57,11 @@ class ProfileFactory:
             ProxyExist: If the proxy already exists in the database.
         """
         if not Proxy.valid_format(server):
-            raise InvalidProxyFormat("expected proxy format - username:password@ip_address:port")
+            raise InvalidProxyFormat(
+                "expected proxy format - username:password@ip_address:port"
+            )
         if self.database.proxy_exists(server):
-            raise ProxyExist('this proxy already exist')
+            raise ProxyExist("this proxy already exist")
         self.database.create_proxy(server, get_country_from_ip(Proxy.get_ip(server)))
 
     def create_proxies_from_file(self, file_name: str) -> None:
@@ -99,7 +107,7 @@ class ProfileFactory:
             ProxyDoesNotExist: If the proxy ID is invalid.
         """
         if not self.database.proxy_exists_by_id(proxy_id):
-            raise ProxyDoesNotExist('invalid proxy id')
+            raise ProxyDoesNotExist("invalid proxy id")
 
         profiles = self.database.get_profiles()
         for profile in profiles:
@@ -126,10 +134,12 @@ class ProfileFactory:
         Returns:
             function: The decorated function.
         """
+
         def wrapper(self, name, *args):
             if not self.database.profile_exists(name):
                 raise ProfileDoesNotExist("profile does not exist")
             return func(self, name, *args)
+
         return wrapper
 
     @profile_exist_required
@@ -144,7 +154,7 @@ class ProfileFactory:
         """
         profile = self.running_profiles.pop(name, None)
         if not profile:
-            raise ProfileIsNotRunning('profile is not active')
+            raise ProfileIsNotRunning("profile is not active")
         thread = Thread(target=profile.stop, daemon=True)
         thread.start()
 
@@ -162,17 +172,21 @@ class ProfileFactory:
             ProfileIsRunning: If the profile is already active.
         """
         if self.profile_is_running(name):
-            raise ProfileIsRunning('profile is active')
+            raise ProfileIsRunning("profile is active")
 
         profile_model = self.database.get_profile(name)
-        proxy_model = self.database.get_proxy(profile_model.proxy_id) if profile_model.proxy_id else None
+        proxy_model = (
+            self.database.get_proxy(profile_model.proxy_id)
+            if profile_model.proxy_id
+            else None
+        )
         profile = Profile(
             profile_model.name,
             profile_model.user_agent,
-            proxy=Proxy(proxy_model.server) if proxy_model else None
+            proxy=Proxy(proxy_model.server) if proxy_model else None,
         )
 
-        thread= Thread(target=profile.run, daemon=True)
+        thread = Thread(target=profile.run, daemon=True)
         thread.start()
         self.running_profiles[name] = profile
         return profile
@@ -186,11 +200,21 @@ class ProfileFactory:
         Returns:
             bool: True if the profile is running, False otherwise.
         """
-        if name in self.running_profiles and not self.running_profiles[name].thread_running:
+        if (
+            name in self.running_profiles
+            and not self.running_profiles[name].thread_running
+        ):
             self.running_profiles.pop(name)
         return name in self.running_profiles
 
-    def create_profile(self, name: str, proxy_id: int = None, description: str = None) -> Profile | None:
+    def create_profile(
+        self,
+        name: str,
+        proxy_id: int = None,
+        note: str = None,
+        status: str = None,
+        user_agent: str = None,
+    ) -> Profile | None:
         """Create a new browser profile.
 
         Args:
@@ -204,9 +228,10 @@ class ProfileFactory:
         if self.database.profile_exists(name):
             raise ProfileExists("Profile with this name already exists")
 
+        user_agent = user_agent or self._get_user_agent()
+
         proxy_id = proxy_id if self.database.proxy_exists_by_id(proxy_id) else None
-        user_agent = self._get_user_agent()
-        self.database.create_profile(name, user_agent, proxy_id, description)
+        self.database.create_profile(name, user_agent, proxy_id, note, status)
         os.mkdir(PROFILES_DIR + f"\\{name}")
 
     def prune(self) -> None:
@@ -233,18 +258,18 @@ class ProfileFactory:
             self.database.change_profile_proxy(name, proxy_id)
             return
         if not self.database.proxy_exists_by_id(proxy_id):
-            raise ProxyDoesNotExist('Invalid proxy id')
+            raise ProxyDoesNotExist("Invalid proxy id")
         self.database.change_profile_proxy(name, proxy_id)
 
     @profile_exist_required
-    def change_description(self, name: str, description: str) -> None:
+    def change_description(self, name: str, note: str) -> None:
         """Change the description of a profile.
 
         Args:
             name (str): The name of the profile.
             description (str): The new description for the profile.
         """
-        self.database.change_profile_description(name, description)
+        self.database.change_profile_note(name, note)
 
     @profile_exist_required
     def delete_profile(self, name: str) -> None:

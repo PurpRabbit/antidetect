@@ -35,11 +35,14 @@ CUSTOM_BANNER = Fore.BLUE + Style.BRIGHT + _banner + _banner_info
 def success_message(text: str) -> None:
     print(Fore.GREEN + f"--> {text}" + Style.RESET_ALL)
 
+
 def error_message(text: str) -> None:
     print(Fore.RED + f"--> {text}" + Style.RESET_ALL)
 
+
 def invalid_arguments_message(argument: str) -> None:
     error_message(f"unexpected argument: {argument}")
+
 
 def warning(text: str) -> bool:
     decision = input(Fore.RED + text)

@@ -1,6 +1,13 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget
 
-from ui.settings import APP_WIDTH, APP_HEIGHT, SIDEBAR_WIDTH, SIDEBAR_HEIGHT, MANAGEBAR_WIDTH, MANAGEBAR_HEIGHT
+from ui.settings import (
+    APP_WIDTH,
+    APP_HEIGHT,
+    SIDEBAR_WIDTH,
+    SIDEBAR_HEIGHT,
+    MANAGEBAR_WIDTH,
+    MANAGEBAR_HEIGHT,
+)
 from ui.sidebar import Sidebar
 from ui.managebar import ManageBar
 from ui.content import ProfilesView, ProxiesView
@@ -29,9 +36,11 @@ class MainWindow(QMainWindow):
         self.sidebar.proxies_button.clicked.connect(self.set_proxies_active)
 
         self.manage_bar_widget = QWidget(self)
-        self.manage_bar_widget.setGeometry(SIDEBAR_WIDTH, 0, MANAGEBAR_WIDTH, MANAGEBAR_HEIGHT)
+        self.manage_bar_widget.setGeometry(
+            SIDEBAR_WIDTH, 0, MANAGEBAR_WIDTH, MANAGEBAR_HEIGHT
+        )
         self.manage_bar_widget.setStyleSheet(utils.load_style_sheet("managebar.qss"))
-    
+
         self.managebar = ManageBar(self.manage_bar_widget)
 
         self.show_profiles_content()
@@ -53,7 +62,7 @@ class MainWindow(QMainWindow):
 
     def set_proxies_active(self):
         if isinstance(self.content, ProfilesView):
-            self.content.deleteLater()           
+            self.content.deleteLater()
             self.show_proxies_content()
             self.sidebar.set_proxies_active()
             self.managebar.set_proxies_active()

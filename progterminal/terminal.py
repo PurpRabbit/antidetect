@@ -5,7 +5,13 @@ from prettytable import PrettyTable
 
 from browser.factory import ProfileFactory
 from browser.exceptions import *
-from progterminal.customize import CUSTOM_PROMPT, CUSTOM_BANNER, success_message, error_message, warning
+from progterminal.customize import (
+    CUSTOM_PROMPT,
+    CUSTOM_BANNER,
+    success_message,
+    error_message,
+    warning,
+)
 from utils.paths import PROFILES_DIR
 
 
@@ -20,11 +26,11 @@ class Terminal(cmd.Cmd):
 
     def do_profile(self, args):
         """Handle the 'profile' command and its subcommands."""
-        if args and ('-h' in args or '--help' in args):
+        if args and ("-h" in args or "--help" in args):
             error_message("use 'help [command]'")
             return
 
-        args = args.split(' ')
+        args = args.split(" ")
         match args:
             case ["list"]:
                 self._show_profiles_list()
@@ -51,11 +57,11 @@ class Terminal(cmd.Cmd):
 
     def do_proxy(self, args):
         """Handle the 'proxy' command and its subcommands."""
-        if args and ('-h' in args or '--help' in args):
+        if args and ("-h" in args or "--help" in args):
             error_message("use 'help [command]'")
             return
 
-        args = args.split(' ')
+        args = args.split(" ")
         match args:
             case ["list"]:
                 self._show_proxy_list()
@@ -86,7 +92,18 @@ class Terminal(cmd.Cmd):
 
     def _show_proxy_list(self):
         """Show the list of proxies in a formatted table."""
-        table = PrettyTable(["ID", "Country", "Address", "Port", "Username", "Password", "Valid", "Profiles count"])
+        table = PrettyTable(
+            [
+                "ID",
+                "Country",
+                "Address",
+                "Port",
+                "Username",
+                "Password",
+                "Valid",
+                "Profiles count",
+            ]
+        )
         for proxy in self.profile_factory.database.get_proxies():
             username, password, address, port = proxy.split_server()
             table.add_row(
@@ -98,7 +115,13 @@ class Terminal(cmd.Cmd):
                     username,
                     password,
                     proxy.is_valid,
-                    len([profile for profile in self.profile_factory.database.get_profiles() if profile.proxy_id == proxy.id]),
+                    len(
+                        [
+                            profile
+                            for profile in self.profile_factory.database.get_profiles()
+                            if profile.proxy_id == proxy.id
+                        ]
+                    ),
                 ]
             )
         print(table)
@@ -146,8 +169,8 @@ class Terminal(cmd.Cmd):
             success_message(f"Proxy for '{name}' was changed to '{proxy_id}'")
             # If u dont remove this path, after u change proxy to 0 value,
             # ur browser will be requiring for pass ang login for prev proxy
-            if os.path.exists(PROFILES_DIR + f'\\{name}\\Default\\Secure Preferences'):
-                os.remove(PROFILES_DIR + f'\\{name}\\Default\\Secure Preferences')
+            if os.path.exists(PROFILES_DIR + f"\\{name}\\Default\\Secure Preferences"):
+                os.remove(PROFILES_DIR + f"\\{name}\\Default\\Secure Preferences")
         except ProxyDoesNotExist as ex:
             error_message(ex)
 
@@ -183,7 +206,7 @@ class Terminal(cmd.Cmd):
                     profile.name,
                     self.profile_factory.profile_is_running(profile.name),
                     profile.proxy_id,
-                    profile.description
+                    profile.description,
                 ]
             )
         print(table)
@@ -191,11 +214,13 @@ class Terminal(cmd.Cmd):
     def _create_profile(self, name, args) -> None:
         """Create a profile with the given name and options."""
         options = {
-            "proxy": ("-p","--proxy"),
-            "description": ("-desc", "--description")
+            "proxy": ("-p", "--proxy"),
+            "description": ("-desc", "--description"),
         }
         parsed_options = self._parse_options(args, options)
-        proxy_id = int(parsed_options.get("proxy")) if parsed_options.get("proxy") else None
+        proxy_id = (
+            int(parsed_options.get("proxy")) if parsed_options.get("proxy") else None
+        )
         description = parsed_options.get("description")
         try:
             self.profile_factory.create_profile(name, proxy_id, description)
@@ -206,7 +231,12 @@ class Terminal(cmd.Cmd):
     def _parse_options(self, args: tuple, options: dict[str, tuple]) -> dict:
         """Parse the options provided in the command arguments."""
         parsed_options = {
-            option_name: next((arg if not arg.startswith(('-', '--')) else None for arg in args[args.index(option) + 1:]))
+            option_name: next(
+                (
+                    arg if not arg.startswith(("-", "--")) else None
+                    for arg in args[args.index(option) + 1 :]
+                )
+            )
             for option_name, option_list in options.items()
             for option in option_list
             if option in args
@@ -244,9 +274,9 @@ Available commands:
         print(help_text)
 
     def do_help(self, arg):
-        if arg == 'profile':
+        if arg == "profile":
             self._help_profile()
-        elif arg == 'proxy':
+        elif arg == "proxy":
             self._help_proxy()
         else:
             print(CUSTOM_BANNER)

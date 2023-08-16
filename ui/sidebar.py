@@ -28,8 +28,12 @@ class Sidebar(QVBoxLayout):
         super().__init__(parent, *args, **kwargs)
 
         # Create sidebar buttons
-        self.profiles_button = SideBarButton(icon=QIcon(icons.PROFILES_MENU_ICON), tool_tip="Profiles")
-        self.proxies_button = SideBarButton(icon=QIcon(icons.PROXIES_MENU_ICON), tool_tip="Proxies")
+        self.profiles_button = SideBarButton(
+            icon=QIcon(icons.PROFILES_MENU_ICON), tool_tip="Profiles"
+        )
+        self.proxies_button = SideBarButton(
+            icon=QIcon(icons.PROXIES_MENU_ICON), tool_tip="Proxies"
+        )
 
         # Set profiles button as active
         self.set_profiles_active()
@@ -43,7 +47,7 @@ class Sidebar(QVBoxLayout):
     def set_profiles_active(self):
         self.proxies_button.set_inactive()
         self.profiles_button.set_active()
-    
+
     def set_proxies_active(self):
         self.profiles_button.set_inactive()
         self.proxies_button.set_active()

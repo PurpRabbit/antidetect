@@ -10,7 +10,7 @@ from browser.proxy import Proxy
 from utils.paths import PROFILES_DIR
 
 
-BROWSER_CLOSE_MESSAGE = 'Unable to evaluate script: no such window: target window already closed\nfrom unknown error: web view not found\n'
+BROWSER_CLOSE_MESSAGE = "Unable to evaluate script: no such window: target window already closed\nfrom unknown error: web view not found\n"
 
 
 class Profile:
@@ -30,12 +30,18 @@ class Profile:
         self.options = webdriver.ChromeOptions()
 
         self.options.add_argument("--port={}".format(random.randint(8001, 9000)))
-        self.options.add_argument("--user-data-dir={}".format(PROFILES_DIR + f'\\{name}'))
+        self.options.add_argument(
+            "--user-data-dir={}".format(PROFILES_DIR + f"\\{name}")
+        )
         self.options.add_argument("user-agent={}".format(user_agent))
         self.options.add_argument("--start-maximized")
-        self.options.add_experimental_option("excludeSwitches", ["disable-background-timer-throttling"])
+        self.options.add_experimental_option(
+            "excludeSwitches", ["disable-background-timer-throttling"]
+        )
         self.options.add_experimental_option("useAutomationExtension", False)
-        self.options.add_experimental_option("excludeSwitches", ["enable-automation", "enable-logging"])
+        self.options.add_experimental_option(
+            "excludeSwitches", ["enable-automation", "enable-logging"]
+        )
 
         self.service = Service()
 
@@ -48,13 +54,12 @@ class Profile:
 
         self.thread_running = True
         while self.thread_running:
-            log = self.browser.get_log('driver')
+            log = self.browser.get_log("driver")
             if not log:
                 continue
             if log[-1]["message"] == BROWSER_CLOSE_MESSAGE:
                 self.thread_running = False
                 self.stop(forced=True)
-    
 
     def stop(self, forced: bool = False):
         """Stop the running profile."""

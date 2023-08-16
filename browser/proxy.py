@@ -5,7 +5,7 @@ import zipfile
 
 import requests
 
-from browser.proxy_setup import manifest_json, get_background_js 
+from browser.proxy_setup import manifest_json, get_background_js
 from utils.paths import PROXIES_DIR
 
 
@@ -34,7 +34,7 @@ class Proxy:
         """
         proxy = {
             "http": "http://{}".format(server),
-            "https": "http://{}".format(server)
+            "https": "http://{}".format(server),
         }
         try:
             response = requests.get("https://www.google.com/", proxies=proxy)
@@ -55,7 +55,7 @@ class Proxy:
         Returns:
             bool: True if the format is valid, False otherwise.
         """
-        pattern = r'^(\w+):(\w+)@(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)$'
+        pattern = r"^(\w+):(\w+)@(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):(\d+)$"
         if not server:
             return False
         match = re.match(pattern, server)
@@ -70,14 +70,18 @@ class Proxy:
         Returns:
             str: The unique name for the proxy file.
         """
-        return hashlib.sha256(self.server.encode()).hexdigest() + '.zip'
+        return hashlib.sha256(self.server.encode()).hexdigest() + ".zip"
 
     def _build_proxy(self) -> None:
         """Build the proxy plugin file."""
-        username, password, address, port = self.server.split("@")[0].split(":") + self.server.split("@")[1].split(":")
-        with zipfile.ZipFile(self.pluginfile, 'w') as zp:
-            zp.writestr('manifest.json', manifest_json)
-            zp.writestr('background.js', get_background_js(username, password, address, port))
+        username, password, address, port = self.server.split("@")[0].split(
+            ":"
+        ) + self.server.split("@")[1].split(":")
+        with zipfile.ZipFile(self.pluginfile, "w") as zp:
+            zp.writestr("manifest.json", manifest_json)
+            zp.writestr(
+                "background.js", get_background_js(username, password, address, port)
+            )
 
     @staticmethod
     def get_ip(server: str) -> str:
@@ -89,4 +93,4 @@ class Proxy:
         Returns:
             str: The IP address of the proxy server.
         """
-        return server.split('@')[1].split(':')[0]
+        return server.split("@")[1].split(":")[0]
