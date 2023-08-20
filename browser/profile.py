@@ -5,15 +5,18 @@ import random
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.common import exceptions
+from webdriver_manager.chrome import ChromeDriverManager
 
 from browser.proxy import Proxy
 from utils.paths import PROFILES_DIR
 
 
 BROWSER_CLOSE_MESSAGE = "Unable to evaluate script: no such window: target window already closed\nfrom unknown error: web view not found\n"
+WEBDRIVER = ChromeDriverManager().install()
 
 
 class Profile:
+
     def __init__(self, name: str, user_agent: str, proxy: Proxy | None = None) -> None:
         """Initialize a Profile instance.
 
@@ -43,7 +46,7 @@ class Profile:
             "excludeSwitches", ["enable-automation", "enable-logging"]
         )
 
-        self.service = Service()
+        self.service = Service(WEBDRIVER)
 
         if proxy:
             self.options.add_extension(proxy.pluginfile)

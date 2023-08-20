@@ -1,10 +1,12 @@
-from typing import Iterable
+from typing import Iterable, Callable
+from threading import Thread
 
 from PyQt6.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QComboBox, QVBoxLayout, QTextEdit, QDialog
-from PyQt6.QtCore import Qt, QSize
+from PyQt6.QtCore import Qt, QSize, QThread
 from PyQt6.QtGui import QIcon
 
 from browser import profile_factory
+from browser.profile import Profile
 from ui.settings import APP_WIDTH, SIDEBAR_WIDTH, SIDEBAR_HEIGHT
 from ui import icons
 from ui import utils
@@ -42,6 +44,8 @@ class ProfilesView(ContentView):
         self.update()
 
     def setItems(self, data: Iterable[Iterable]):
+        proxies = self._get_proxies()
+        proxies.insert(0, (0, ""))
         for i, profile in enumerate(data):
             self.setItem(i, 0, ContentItem(QIcon(icons.PROFILE_ICON), profile[0]))
 
@@ -57,7 +61,15 @@ class ProfilesView(ContentView):
             notes.clicked.connect(self.update_note)
             self.setCellWidget(i, 3, notes)
 
-            self.setItem(i, 4, ContentItem(profile[4]))
+            proxy = ProfileProxyCombo(
+                proxies, 
+                profile_factory.database.get_proxy(profile[4]).server if profile[4] else None,
+                profile[4], profile[0], row=i, col=4)
+            proxy.currentIndexChanged.connect(self.update_proxy)
+            self.setCellWidget(i, 4, proxy)
+
+    def _get_proxies(self) -> list[str]:
+        return [(proxy.id, proxy.server) for proxy in profile_factory.database.get_proxies()]
 
     def update_note(self):
         self.sender_note: ProfileNotesButton = self.sender()
@@ -87,10 +99,18 @@ class ProfilesView(ContentView):
     def update_status(self):
         combo: ProfileStatusCombo = self.sender()
         profile_factory.database.update_profile_status(combo.profile_name, combo.currentText())
+    
+    def update_proxy(self):
+        combo: ProfileProxyCombo = self.sender()
+        current_combo_text = combo.currentText()
+        for id_, server in combo.items:
+            if server == current_combo_text:
+                profile_factory.database.change_profile_proxy(combo.profile_name, id_)
+                break
 
     def update(self):
         profiles = [
-            (profile.name, profile_factory.profile_is_running(profile.name), profile.status, str(profile.note), str(profile.proxy_id))
+            (profile.name, profile_factory.profile_is_running(profile.name), profile.status, str(profile.note), int(profile.proxy_id))
             for profile in profile_factory.database.get_profiles()
         ]
         self.setRowCount(len(profiles))
@@ -110,16 +130,27 @@ class ProfilesView(ContentView):
             new_button.clicked.connect(self.change_running_status)
             self.setCellWidget(button.row, button.col, new_button)
         else:
-            profile_factory.run_profile(button.profile_name)
+            profile = profile_factory.run_profile(button.profile_name)
             new_button = ProfileActiveButton(
                 QIcon(icons.STOP_ICON), 
                 "Stop", 
-                button.profile_name, 
+                button.profile_name,
                 button.row, button.col, 
                 not button.is_active
             )
             new_button.clicked.connect(self.change_running_status)
             self.setCellWidget(button.row, button.col, new_button)
+
+    def profile_finished(self, sender):
+        new_button = ProfileActiveButton(
+            QIcon(icons.START_ICON), 
+            "Start", 
+            sender.profile_name, 
+            sender.row, sender.col, 
+            not sender.is_active
+        )
+        new_button.clicked.connect(self.change_running_status)
+        self.setCellWidget(sender.row, sender.col, new_button)
 
 
 class ProxiesView(ContentView):
@@ -147,7 +178,6 @@ class ProxiesView(ContentView):
             username, password, address, port = proxy.split_server()
             proxies.append(
                 (
-                    proxy.id,
                     proxy.country,
                     address,
                     port,
@@ -186,6 +216,22 @@ class ProfileStatusCombo(QComboBox):
 
         if active_status:
             self.setCurrentIndex(items.index(self.active_status))
+
+
+class ProfileProxyCombo(QComboBox):
+    def __init__(self, items: Iterable[str], active_proxy: str, proxy_id: int, profile_name: str, row: int, col: int):
+        super().__init__()
+
+        self.addItems([item[1] for item in items])
+        self.items = items
+        self.profile_name = profile_name
+        self.active_proxy = active_proxy
+        self.proxy_id = proxy_id
+        self.row = row
+        self.col = col
+
+        if active_proxy:
+            self.setCurrentIndex(self.proxy_id)
 
 
 class ProfileNotesButton(QPushButton):

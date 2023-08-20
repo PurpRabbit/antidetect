@@ -8,13 +8,14 @@ from PyQt6.QtWidgets import (
     QDialog,
     QLineEdit,
     QComboBox,
+    QTextEdit
 )
 from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QIcon
 
 from browser import profile_factory
 from browser.user_agent import user_agents
-from browser.exceptions import ProfileExists
+from browser.exceptions import ProfileExists, InvalidProxyFormat, ProxyExist
 from ui import icons
 from ui import utils
 
@@ -49,10 +50,10 @@ class ManageBar(QHBoxLayout):
         self.create_profile_button.hide()
 
     def create_profile(self):
-        profile_form = CreateProfileForm(self.parent())
+        CreateProfileForm(self.parent())
 
     def add_proxy(self):
-        pass
+        CreateProxyForm(self.parent())
 
 
 class CreateProfileForm(QDialog):
@@ -137,3 +138,31 @@ class CreateProxyForm(QDialog):
         main_layout = QVBoxLayout(self)
         h_layout = QHBoxLayout()
         v_layout = QVBoxLayout()
+
+        self.info = QTextEdit()
+        self.info.setReadOnly(True)
+        self.info.setText("Allowed format:\n    username:password@ip_address:port\nYou can add an unlimited number of proxies.\nPaste each proxy on a new line.\nIf the proxy does not match the format, it will not be added.")
+
+        self.proxy_input = QTextEdit()
+        create_button = QPushButton(QIcon(icons.CREATE_ICON), "Add")
+        create_button.clicked.connect(self.create)
+
+        h_layout.addWidget(self.info)
+        h_layout.addWidget(self.proxy_input)
+        v_layout.addWidget(create_button)
+
+        main_layout.addLayout(h_layout)
+        main_layout.addLayout(v_layout)
+
+        self.show()
+
+    def create(self):
+        servers = self.proxy_input.toPlainText().split("\n")
+        for server in servers:
+            try:
+                profile_factory.create_proxy(server)
+            except (InvalidProxyFormat, ProxyExist) as ex:
+                continue
+        
+        self.parent().parent().content.update()
+        self.deleteLater()

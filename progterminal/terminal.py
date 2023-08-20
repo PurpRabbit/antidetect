@@ -157,7 +157,7 @@ class Terminal(cmd.Cmd):
     def _change_description(self, name: str, description: tuple):
         """Change the description of a profile."""
         try:
-            self.profile_factory.change_description(name, " ".join(description))
+            self.profile_factory.change_note(name, " ".join(description))
             success_message(f"Description for '{name}' was successfully changed ")
         except ProfileDoesNotExist as ex:
             error_message(ex)
@@ -206,7 +206,7 @@ class Terminal(cmd.Cmd):
                     profile.name,
                     self.profile_factory.profile_is_running(profile.name),
                     profile.proxy_id,
-                    profile.description,
+                    profile.note,
                 ]
             )
         print(table)

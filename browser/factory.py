@@ -262,7 +262,7 @@ class ProfileFactory:
         self.database.change_profile_proxy(name, proxy_id)
 
     @profile_exist_required
-    def change_description(self, name: str, note: str) -> None:
+    def change_note(self, name: str, note: str) -> None:
         """Change the description of a profile.
 
         Args:
