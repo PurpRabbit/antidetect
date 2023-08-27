@@ -18,7 +18,7 @@ This program allows you to create and manage multiple profiles and proxies. It p
 
 ## Overview
 
-    ![View](https://imgur.com/a/dHDwIgE)
+    ![View](https://imgur.com/a/dHDwIgE.png)
 
 ## License
 
