@@ -1,8 +1,6 @@
 SQLAlchemy==2.0.15
 selenium==4.8.2
 requests==2.31.0
-prettytable==3.7.0
 geoip2==4.7.0
-colorama==0.4.6
-art==5.9
 PyQt6==6.5.2
+webdriver-manager==4.0.0

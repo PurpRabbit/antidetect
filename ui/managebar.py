@@ -21,7 +21,7 @@ from ui import utils
 
 
 class ManageBar(QHBoxLayout):
-    def __init__(self, parent: QWidget | None, *args, **kwargs):
+    def __init__(self, parent: QWidget, *args, **kwargs):
         super().__init__(parent, *args, **kwargs)
 
         self.create_profile_button = QPushButton(
@@ -35,6 +35,11 @@ class ManageBar(QHBoxLayout):
         )
         self.add_proxy_button.setIconSize(QSize(20, 20))
         self.add_proxy_button.clicked.connect(self.add_proxy)
+
+        self.delete_entity_button = QPushButton(icon=QIcon(icons.DELETE_ICON))
+        self.delete_entity_button.setStyleSheet("border: none;")
+        self.addWidget(self.delete_entity_button)
+        self.delete_entity_button.hide()
 
         self.addStretch(10)
         self.addWidget(self.create_profile_button)

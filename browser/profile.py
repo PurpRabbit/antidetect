@@ -17,7 +17,7 @@ WEBDRIVER = ChromeDriverManager().install()
 
 class Profile:
 
-    def __init__(self, name: str, user_agent: str, proxy: Proxy | None = None) -> None:
+    def __init__(self, name: str, user_agent: str, proxy: Proxy = None) -> None:
         """Initialize a Profile instance.
 
         Args:

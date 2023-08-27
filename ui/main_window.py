@@ -1,4 +1,5 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget
+from PyQt6.QtGui import QIcon
 
 from ui.settings import (
     APP_WIDTH,
@@ -12,6 +13,7 @@ from ui.sidebar import Sidebar
 from ui.managebar import ManageBar
 from ui.content import ProfilesView, ProxiesView
 from ui import utils
+from ui import icons
 from browser import profile_factory
 
 
@@ -20,6 +22,7 @@ class MainWindow(QMainWindow):
         super().__init__()
 
         self.setWindowTitle("Antidetect Browser by PurpRabbit")
+        self.setWindowIcon(QIcon(icons.MAIN_WINDOW_PIC))
         self.setGeometry(500, 200, APP_WIDTH, APP_HEIGHT)
         self.setFixedSize(APP_WIDTH, APP_HEIGHT)
         self.setStyleSheet(utils.load_style_sheet("mainwindow.qss"))
@@ -42,16 +45,31 @@ class MainWindow(QMainWindow):
         self.manage_bar_widget.setStyleSheet(utils.load_style_sheet("managebar.qss"))
 
         self.managebar = ManageBar(self.manage_bar_widget)
+        self.managebar.delete_entity_button.clicked.connect(self.delete_entity)
 
         self.show_profiles_content()
+
+    def delete_entity(self):
+        if isinstance(self.content, ProfilesView):
+            for checkbox in self.content.checked_rows:
+                profile_factory.delete_profile(checkbox.entity)
+        elif isinstance(self.content, ProxiesView):
+            for checkbox in self.content.checked_rows:
+                profile_factory.delete_proxy(checkbox.entity)
+        
+        self.content.checked_rows.clear()
+        self.content.update()
+        self.managebar.delete_entity_button.hide()
 
     def show_profiles_content(self):
         self.content = ProfilesView(self)
         self.content.show()
+        self.managebar.delete_entity_button.hide()
 
     def show_proxies_content(self):
         self.content = ProxiesView(self)
         self.content.show()
+        self.managebar.delete_entity_button.hide()
 
     def set_profiles_active(self):
         if isinstance(self.content, ProxiesView):

@@ -7,7 +7,7 @@ STYLES_DIR = os.path.join(BASE_DIR, "ui", "styles")
 ICONS_DIR = os.path.join(BASE_DIR, "ui", "icons")
 
 
-APP_WIDTH = 800
+APP_WIDTH = 820
 APP_HEIGHT = 600
 
 SIDEBAR_WIDTH = 60

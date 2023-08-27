@@ -18,7 +18,6 @@ from browser.user_agent import user_agents
 from browser.profile import Profile
 from browser.proxy import Proxy
 from database.connector import SqlDatabase
-from progterminal.customize import success_message, error_message
 
 
 class ProfileFactory:
@@ -40,10 +39,8 @@ class ProfileFactory:
 
             validated = Proxy.check_connection(proxy.server)
             if validated:
-                success_message(f"'{proxy.server}' validation success")
                 self.database.change_proxy_valid(proxy.server, True)
             else:
-                error_message(f"'{proxy.server}' validation unsuccess")
                 self.database.change_proxy_valid(proxy.server, False)
 
     def create_proxy(self, server: str) -> None:
@@ -86,13 +83,10 @@ class ProfileFactory:
         for proxy in proxies:
             proxy = proxy.strip()
             if not Proxy.valid_format(proxy):
-                error_message(f"invalid proxy format: {proxy}")
                 continue
             if self.database.proxy_exists(proxy):
-                error_message(f"{proxy} proxy already exist")
                 continue
             self.database.create_proxy(proxy, get_country_from_ip(Proxy.get_ip(proxy)))
-            success_message(f"{proxy} created successfuly")
 
     def delete_proxy(self, proxy_id: int) -> str:
         """Delete a proxy from the database.
@@ -214,7 +208,7 @@ class ProfileFactory:
         note: str = None,
         status: str = None,
         user_agent: str = None,
-    ) -> Profile | None:
+    ) -> Profile:
         """Create a new browser profile.
 
         Args:
