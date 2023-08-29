@@ -60,7 +60,7 @@ class ProfilesView(ContentView):
 
     def set_items(self, data: Iterable[Iterable]):
         proxies = self._get_proxies()
-        
+
         for i, profile in enumerate(data):
             checkbox = ProfileCheckBox(profile[0], i)
             checkbox.clicked.connect(self.checkbox_clicked)
@@ -88,7 +88,9 @@ class ProfilesView(ContentView):
             self.setCellWidget(i, 5, proxy)
 
     def _get_proxies(self) -> list[str]:
-        return [(proxy.id, proxy.server) for proxy in profile_factory.database.get_proxies()].insert(0, (0, ""))
+        proxies = [(proxy.id, proxy.server) for proxy in profile_factory.database.get_proxies()]
+        proxies.insert(0, (0, ""))
+        return proxies
 
     def update_note(self):
         self.sender_note: ProfileNotesButton = self.sender()
