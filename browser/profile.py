@@ -1,10 +1,7 @@
-import time
-import threading
 import random
 
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
-from selenium.common import exceptions
 from webdriver_manager.chrome import ChromeDriverManager
 
 from browser.proxy import Proxy
@@ -53,9 +50,9 @@ class Profile:
 
     def run(self):
         """Start running the profile in a separate thread."""
+        self.thread_running = True
         self.browser = webdriver.Chrome(service=self.service, options=self.options)
 
-        self.thread_running = True
         while self.thread_running:
             log = self.browser.get_log("driver")
             if not log:

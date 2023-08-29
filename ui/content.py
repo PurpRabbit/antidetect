@@ -2,7 +2,7 @@ from typing import Iterable, Callable
 from threading import Thread
 
 from PyQt6.QtWidgets import QWidget, QTableWidget, QTableWidgetItem, QHeaderView, QPushButton, QComboBox, QVBoxLayout, QTextEdit, QDialog, QCheckBox
-from PyQt6.QtCore import Qt, QSize, QThread
+from PyQt6.QtCore import Qt, QSize, QThread, pyqtSignal
 from PyQt6.QtGui import QIcon
 
 from browser import profile_factory
@@ -60,7 +60,7 @@ class ProfilesView(ContentView):
 
     def set_items(self, data: Iterable[Iterable]):
         proxies = self._get_proxies()
-        proxies.insert(0, (0, ""))
+        
         for i, profile in enumerate(data):
             checkbox = ProfileCheckBox(profile[0], i)
             checkbox.clicked.connect(self.checkbox_clicked)
@@ -88,7 +88,7 @@ class ProfilesView(ContentView):
             self.setCellWidget(i, 5, proxy)
 
     def _get_proxies(self) -> list[str]:
-        return [(proxy.id, proxy.server) for proxy in profile_factory.database.get_proxies()]
+        return [(proxy.id, proxy.server) for proxy in profile_factory.database.get_proxies()].insert(0, (0, ""))
 
     def update_note(self):
         self.sender_note: ProfileNotesButton = self.sender()
@@ -137,39 +137,43 @@ class ProfilesView(ContentView):
 
     def change_running_status(self):
         button: ProfileActiveButton = self.sender()
+
         if button.is_active:
             profile_factory.stop_profile(button.profile_name)
+            button_text = "Start"
+            button_icon = QIcon(icons.START_ICON)
+        else:
+            profile = profile_factory.run_profile(button.profile_name)
+            # Worker checks if browser was closed by clicking on X button
+            worker = ProfileWorker(profile)
+            on_finish = self.profile_finished(profile, button.row, button.col, not button.is_active)
+            worker.finished_signal.connect(on_finish)
+            worker.start()
+            button_text = "Stop"
+            button_icon = QIcon(icons.STOP_ICON)
+
+        new_button = ProfileActiveButton(
+            button_icon, 
+            button_text, 
+            button.profile_name, 
+            button.row, button.col, 
+            not button.is_active
+        )
+        new_button.clicked.connect(self.change_running_status)
+        self.setCellWidget(button.row, button.col, new_button)
+
+    def profile_finished(self, profile: Profile, row: int, col: int, is_active: bool):
+        def wrapper(): 
             new_button = ProfileActiveButton(
                 QIcon(icons.START_ICON), 
                 "Start", 
-                button.profile_name, 
-                button.row, button.col, 
-                not button.is_active
+                profile.name, 
+                row, col, 
+                not is_active
             )
             new_button.clicked.connect(self.change_running_status)
-            self.setCellWidget(button.row, button.col, new_button)
-        else:
-            profile = profile_factory.run_profile(button.profile_name)
-            new_button = ProfileActiveButton(
-                QIcon(icons.STOP_ICON), 
-                "Stop", 
-                button.profile_name,
-                button.row, button.col, 
-                not button.is_active
-            )
-            new_button.clicked.connect(self.change_running_status)
-            self.setCellWidget(button.row, button.col, new_button)
-
-    def profile_finished(self, sender):
-        new_button = ProfileActiveButton(
-            QIcon(icons.START_ICON), 
-            "Start", 
-            sender.profile_name, 
-            sender.row, sender.col, 
-            not sender.is_active
-        )
-        new_button.clicked.connect(self.change_running_status)
-        self.setCellWidget(sender.row, sender.col, new_button)
+            self.setCellWidget(row, col, new_button)
+        return wrapper
 
 
 class ProxiesView(ContentView):
@@ -290,3 +294,18 @@ class ProfileCheckBox(CheckBoxEntity):
 class ProxyCheckBox(CheckBoxEntity):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+
+class ProfileWorker(QThread):
+    finished_signal = pyqtSignal()
+
+    def __init__(self, profile: Profile, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.profile = profile
+
+    def run(self):
+        while self.profile.thread_running:
+            pass
+        
+        self.finished_signal.emit()

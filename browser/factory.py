@@ -250,6 +250,11 @@ class ProfileFactory:
         """
         if proxy_id == 0:
             self.database.change_profile_proxy(name, proxy_id)
+            # If u dont remove this path, after u change proxy to 0 value,
+            # ur browser will be requiring for pass ang login for prev proxy
+            secure_path = os.path.join(PROFILES_DIR, name, "Default", "Secure Preferences")
+            if os.path.exists(secure_path):
+                os.remove(secure_path)
             return
         if not self.database.proxy_exists_by_id(proxy_id):
             raise ProxyDoesNotExist("Invalid proxy id")
