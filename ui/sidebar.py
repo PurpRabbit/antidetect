@@ -34,20 +34,30 @@ class Sidebar(QVBoxLayout):
         self.proxies_button = SideBarButton(
             icon=QIcon(icons.PROXIES_MENU_ICON), tool_tip="Proxies"
         )
+        self.web3_button = SideBarButton(
+            icon=QIcon(icons.WEB3_ICON), tool_tip="Web3 accounts"
+        )
 
         # Set profiles button as active
         self.set_profiles_active()
 
         # Sidebar settings
         self.addWidget(self.profiles_button)
-        self.addSpacing(5)
         self.addWidget(self.proxies_button)
+        self.addWidget(self.web3_button)
         self.addStretch(5)
 
     def set_profiles_active(self):
         self.proxies_button.set_inactive()
+        self.web3_button.set_inactive()
         self.profiles_button.set_active()
 
     def set_proxies_active(self):
         self.profiles_button.set_inactive()
+        self.web3_button.set_inactive()
         self.proxies_button.set_active()
+
+    def set_web3_accounts_active(self):
+        self.profiles_button.set_inactive()
+        self.proxies_button.set_inactive()
+        self.web3_button.set_active()

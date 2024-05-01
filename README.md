@@ -12,7 +12,7 @@ This program allows you to create and manage multiple profiles and proxies. It p
 
 ### Getting Started
 
-1. [Download](https://github.com/PurpRabbit/antidetect/releases/download/0.1.0/Antidetect.rar) latest release.
+1. [Download](https://github.com/PurpRabbit/antidetect/releases/download/0.1.1/Antidetect.rar) latest release.
 2. Unzip downloaded folder.
 3. Run Antidetect.exe file.
 

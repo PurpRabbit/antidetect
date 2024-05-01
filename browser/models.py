@@ -1,5 +1,5 @@
-from sqlalchemy import Column, Integer, String, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import Column, Integer, String, Boolean, Text
 
 
 Base = declarative_base()
@@ -10,9 +10,9 @@ class ProfileModel(Base):
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     name = Column("name", String(32))
-    status = Column("status", String(32))
     user_agent = Column("user_agent", String(256))
-    proxy_id = Column("proxy_id", Integer, default=0)
+    status = Column("status", String(32), default=None)
+    proxy_server = Column("proxy_server", String(256), default=None)
     note = Column("note", Text, default=None)
 
 
@@ -24,6 +24,9 @@ class ProxyModel(Base):
     is_valid = Column("is_valid", Boolean, default=None)
     country = Column("country", String(64), default=None)
 
-    def split_server(self) -> tuple[str]:
-        user_data, ip_address = self.server.split("@")
-        return tuple(user_data.split(":") + ip_address.split(":"))
+
+class WalletModel(Base):
+    __tablename__ = "wallet"
+
+    id = Column("id", Integer, primary_key=True, autoincrement=True)
+    private_key = Column("private_key", String(64), unique=True)

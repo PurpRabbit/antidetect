@@ -1,20 +1,22 @@
 from PyQt6.QtWidgets import QMainWindow, QWidget
 from PyQt6.QtGui import QIcon
+from PyQt6.QtCore import QSize
 
+from ui.sidebar import Sidebar
+from ui.content import (
+    ContentView,
+    ProfileContentView,
+    ProxyContentView,
+    Web3AccountsContentView,
+)
+from ui import icons, utils
 from ui.settings import (
     APP_WIDTH,
     APP_HEIGHT,
     SIDEBAR_WIDTH,
     SIDEBAR_HEIGHT,
     MANAGEBAR_WIDTH,
-    MANAGEBAR_HEIGHT,
 )
-from ui.sidebar import Sidebar
-from ui.managebar import ManageBar
-from ui.content import ProfilesView, ProxiesView
-from ui import utils
-from ui import icons
-from browser import profile_factory
 
 
 class MainWindow(QMainWindow):
@@ -24,12 +26,9 @@ class MainWindow(QMainWindow):
         self.setWindowTitle("Antidetect Browser by PurpRabbit")
         self.setWindowIcon(QIcon(icons.MAIN_WINDOW_PIC))
         self.setGeometry(500, 200, APP_WIDTH, APP_HEIGHT)
-        self.setFixedSize(APP_WIDTH, APP_HEIGHT)
+        self.setMinimumSize(APP_WIDTH, APP_HEIGHT)
         self.setStyleSheet(utils.load_style_sheet("mainwindow.qss"))
 
-        self.init_ui()
-
-    def init_ui(self):
         self.sidebar_widget = QWidget(self)
         self.sidebar_widget.setGeometry(0, 0, SIDEBAR_WIDTH, SIDEBAR_HEIGHT)
         self.sidebar_widget.setStyleSheet(utils.load_style_sheet("sidebar.qss"))
@@ -37,50 +36,41 @@ class MainWindow(QMainWindow):
         self.sidebar = Sidebar(self.sidebar_widget)
         self.sidebar.profiles_button.clicked.connect(self.set_profiles_active)
         self.sidebar.proxies_button.clicked.connect(self.set_proxies_active)
+        self.sidebar.web3_button.clicked.connect(self.set_web3_accounts_active)
 
-        self.manage_bar_widget = QWidget(self)
-        self.manage_bar_widget.setGeometry(
-            SIDEBAR_WIDTH, 0, MANAGEBAR_WIDTH, MANAGEBAR_HEIGHT
+        self.resizeEvent = self.resize_event
+
+        self.show_content(ProfileContentView)
+
+    def resize_event(self, event):
+        super().resizeEvent(event)
+        self.update_size()
+
+    def update_size(self):
+        window_size: QSize = self.size()
+        self.content.setGeometry(
+            SIDEBAR_WIDTH, 0, window_size.width() - SIDEBAR_WIDTH, window_size.height()
         )
-        self.manage_bar_widget.setStyleSheet(utils.load_style_sheet("managebar.qss"))
-
-        self.managebar = ManageBar(self.manage_bar_widget)
-        self.managebar.delete_entity_button.clicked.connect(self.delete_entity)
-
-        self.show_profiles_content()
-
-    def delete_entity(self):
-        if isinstance(self.content, ProfilesView):
-            for checkbox in self.content.checked_rows:
-                profile_factory.delete_profile(checkbox.entity)
-        elif isinstance(self.content, ProxiesView):
-            for checkbox in self.content.checked_rows:
-                profile_factory.delete_proxy(checkbox.entity)
-        
-        self.content.checked_rows.clear()
-        self.content.update()
-        self.managebar.delete_entity_button.hide()
-
-    def show_profiles_content(self):
-        self.content = ProfilesView(self)
-        self.content.show()
-        self.managebar.delete_entity_button.hide()
-
-    def show_proxies_content(self):
-        self.content = ProxiesView(self)
-        self.content.show()
-        self.managebar.delete_entity_button.hide()
+        self.sidebar_widget.setGeometry(0, 0, SIDEBAR_WIDTH, window_size.height())
 
     def set_profiles_active(self):
-        if isinstance(self.content, ProxiesView):
+        if isinstance(self.content, ProxyContentView):
             self.content.deleteLater()
-            self.show_profiles_content()
+            self.show_content(ProfileContentView)
             self.sidebar.set_profiles_active()
-            self.managebar.set_profiles_active()
 
     def set_proxies_active(self):
-        if isinstance(self.content, ProfilesView):
+        if isinstance(self.content, (ProfileContentView, Web3AccountsContentView)):
             self.content.deleteLater()
-            self.show_proxies_content()
+            self.show_content(ProxyContentView)
             self.sidebar.set_proxies_active()
-            self.managebar.set_proxies_active()
+
+    def set_web3_accounts_active(self):
+        if isinstance(self.content, (ProfileContentView, ProxyContentView)):
+            self.content.deleteLater()
+            self.show_content(Web3AccountsContentView)
+            self.sidebar.set_web3_accounts_active()
+
+    def show_content(self, contentview: ContentView):
+        self.content = contentview(self)
+        self.content.show()

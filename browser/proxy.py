@@ -4,12 +4,16 @@ import hashlib
 import zipfile
 
 import requests
+from sqlalchemy import update, delete, select
 
-from browser.proxy_setup import manifest_json, get_background_js
-from utils.paths import PROXIES_DIR
+from browser.models import ProxyModel
+from browser.manager import ObjectsManager
+from utils.paths import PROXIES_DIR, SETUP_DIR
 
 
 class Proxy:
+    model = ProxyModel
+
     def __init__(self, server: str) -> None:
         """Initialize a Proxy instance.
 
@@ -21,6 +25,18 @@ class Proxy:
 
         if not os.path.exists(self.pluginfile):
             self._build_proxy()
+
+    @classmethod
+    def all_models(cls) -> list[ProxyModel]:
+        """Return list of all proxies"""
+        return ObjectsManager.all(cls.model)
+
+    @classmethod
+    def exists(cls, proxy_server: str) -> bool:
+        stmt = select(cls.model).where(cls.model.server == proxy_server)
+        if ObjectsManager.get(stmt):
+            return True
+        return False
 
     @staticmethod
     def check_connection(server: str) -> bool:
@@ -72,15 +88,28 @@ class Proxy:
         """
         return hashlib.sha256(self.server.encode()).hexdigest() + ".zip"
 
+    def _get_manifest(self) -> str:
+        with open(os.path.join(SETUP_DIR + "proxymanifest.json")) as fp:
+            manifest = fp.read()
+            return manifest
+
+    def _get_background_js(
+        self, username: str, password: str, address: str, port: int
+    ) -> str:
+        with open(os.path.join(SETUP_DIR + "proxybackground.js")) as fp:
+            background = fp.read()
+            return background % (address, port, username, password)
+
     def _build_proxy(self) -> None:
         """Build the proxy plugin file."""
         username, password, address, port = self.server.split("@")[0].split(
             ":"
         ) + self.server.split("@")[1].split(":")
         with zipfile.ZipFile(self.pluginfile, "w") as zp:
-            zp.writestr("manifest.json", manifest_json)
+            zp.writestr("manifest.json", self._get_manifest)
             zp.writestr(
-                "background.js", get_background_js(username, password, address, port)
+                "background.js",
+                self._get_background_js(username, password, address, port),
             )
 
     @staticmethod
@@ -94,3 +123,8 @@ class Proxy:
             str: The IP address of the proxy server.
         """
         return server.split("@")[1].split(":")[0]
+
+    @staticmethod
+    def split_server(server: str) -> tuple[str]:
+        user_data, ip_address = server.split("@")
+        return tuple(user_data.split(":") + ip_address.split(":"))
