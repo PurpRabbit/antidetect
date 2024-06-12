@@ -3,7 +3,6 @@ from PyQt6.QtWidgets import QWidget
 from ui.settings import SIDEBAR_WIDTH, MANAGEBAR_HEIGHT
 from ui.managebar import ProfileManageBar, ProxyManageBar, Web3AccountsManageBar
 from ui.table import ProfileTable, ProxyTable, Web3AccountsTable
-from ui import utils
 
 
 class ContentView(QWidget):
@@ -15,7 +14,6 @@ class ContentView(QWidget):
         self.table = table(self)
         self.table.update()
 
-        self.setStyleSheet(utils.load_style_sheet("content.qss"))
         window_size = self.parent().size()
         self.setGeometry(
             SIDEBAR_WIDTH, 0, window_size.width() - SIDEBAR_WIDTH, window_size.height()

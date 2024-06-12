@@ -11,6 +11,9 @@ from PyQt6.QtWidgets import (
     QComboBox,
     QCheckBox,
     QHBoxLayout,
+    QVBoxLayout,
+    QDialog,
+    QTextEdit,
 )
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QIcon
@@ -22,7 +25,6 @@ from ui.settings import (
     MANAGEBAR_WIDTH,
 )
 from ui import icons
-from ui import utils
 from utils import threadutil
 
 
@@ -51,6 +53,19 @@ class Table(QTableWidget):
 
     def update():
         raise NotImplementedError
+
+    def checkbox_clicked(self) -> None:
+        sender: QCheckBox = self.sender()
+        if sender.isChecked():
+            self.checked_rows.add(sender)
+        else:
+            self.checked_rows.remove(sender)
+
+        delete_button: QPushButton = self.parent().managebar.delete_entity_button
+        if self.checked_rows and delete_button.isHidden():
+            delete_button.show()
+        elif not self.checked_rows and not delete_button.isHidden():
+            delete_button.hide()
 
 
 class TableItem(QTableWidgetItem):
@@ -90,6 +105,75 @@ class ProfileTable(Table):
             self._set_name_column(index, 0, profile)
             self._set_start_button(index, 1, profile)
             self._set_status_combo(index, 2, profile)
+            self._set_note(index, 3, profile)
+            self._set_proxy(index, 4, profile)
+
+    def _set_proxy(self, row: int, col: int, profile: Profile):
+        proxies = [proxy.server for proxy in Proxy.all_models()]
+        proxies.insert(0, None)
+
+        if not Proxy.exists(profile.proxy_server):
+            profile.set_proxy(None)
+
+        active_proxy = profile.proxy_server
+
+        proxy = ProfileProxyCombo(
+            items=proxies,
+            active_proxy=active_proxy,
+            proxy_id=proxies.index(active_proxy),
+            profile=profile,
+            row=row,
+            col=col,
+        )
+
+        proxy.currentIndexChanged.connect(self._update_proxy)
+        self.setCellWidget(row, col, proxy)
+
+    def _update_proxy(self):
+        combo: ProfileProxyCombo = self.sender()
+        profile: Profile = combo.profile
+        current_combo_proxy_server = combo.currentText()
+        for server in combo.items:
+            if server == current_combo_proxy_server:
+                profile.set_proxy(server)
+                break
+
+    def _set_note(self, row: int, col: int, profile: Profile):
+        note = ProfileNotesButton(
+            QIcon(icons.EDIT_ICON),
+            text=(profile.note if profile.note != "None" else "note"),
+            profile=profile,
+            row=row,
+            col=col,
+        )
+        note.clicked.connect(self._update_note)
+        self.setCellWidget(row, col, note)
+
+    def _update_note(self):
+        self.sender_note: ProfileNotesButton = self.sender()
+
+        self.note_dialog = QDialog()
+        self.note_dialog.setWindowTitle("Note")
+        layout = QVBoxLayout(self.note_dialog)
+
+        self.note = QTextEdit()
+        self.note.setPlaceholderText("Enter note...")
+        if self.sender_note.text_ != "note":
+            self.note.setText(self.sender_note.text_)
+
+        save_button = QPushButton(QIcon(icons.SAVE_ICON), "Save")
+        save_button.clicked.connect(self._save_note)
+
+        layout.addWidget(self.note)
+        layout.addWidget(save_button)
+
+        self.note_dialog.exec()
+
+    def _save_note(self):
+        profile: Profile = self.sender_note.profile
+        profile.set_note(self.note.toPlainText())
+        self.update()
+        self.note_dialog.deleteLater()
 
     def _set_status_combo(self, row: int, col: int, profile: Profile):
         status_combo = ProfileStatusCombo(["New", "Ready"], profile, row, col)
@@ -162,7 +246,6 @@ class ProfileTable(Table):
 
     def _set_name_column(self, row: int, col: int, profile: Profile) -> None:
         name_widget = QWidget(self)
-        name_widget.setStyleSheet("border: none;")
         layout = QHBoxLayout(name_widget)
 
         checkbox = ProfileCheckBox(profile, row)
@@ -179,19 +262,6 @@ class ProfileTable(Table):
         name_widget.setLayout(layout)
 
         self.setCellWidget(row, col, name_widget)
-
-    def checkbox_clicked(self) -> None:
-        sender: QCheckBox = self.sender()
-        if sender.isChecked():
-            self.checked_rows.add(sender)
-        else:
-            self.checked_rows.remove(sender)
-
-        delete_button: QPushButton = self.parent().managebar.delete_entity_button
-        if self.checked_rows and delete_button.isHidden():
-            delete_button.show()
-        elif not self.checked_rows and not delete_button.isHidden():
-            delete_button.hide()
 
 
 class ProfileActiveButton(QPushButton):
@@ -213,11 +283,6 @@ class ProfileActiveButton(QPushButton):
         self.row = row
         self.col = col
 
-        style_sheet_file = (
-            "profile_active.qss" if self.is_running else "profile_inactive.qss"
-        )
-        self.setStyleSheet(utils.load_style_sheet(style_sheet_file))
-
 
 class ProfileCheckBox(CheckBoxEntity):
     def __init__(self, *args, **kwargs):
@@ -228,8 +293,6 @@ class ProfileStatusCombo(QComboBox):
     def __init__(self, items: Iterable[str], profile: Profile, row: int, col: int):
         super().__init__()
 
-        self.setStyleSheet("border: none;")
-
         self.addItems(items)
         self.profile = profile
         self.active_status = profile.status
@@ -238,6 +301,42 @@ class ProfileStatusCombo(QComboBox):
 
         if self.active_status:
             self.setCurrentIndex(items.index(self.active_status))
+
+
+class ProfileNotesButton(QPushButton):
+    def __init__(self, icon: QIcon, text: str, profile: str, row: int, col: int):
+        super().__init__(icon, text)
+
+        self.text_ = text
+        self.profile = profile
+        self.row = row
+        self.col = col
+
+        self.setIconSize(QSize(10, 10))
+
+
+class ProfileProxyCombo(QComboBox):
+    def __init__(
+        self,
+        items: Iterable[str],
+        active_proxy: str,
+        proxy_id: int,
+        profile: str,
+        row: int,
+        col: int,
+    ):
+        super().__init__()
+
+        self.addItems(items)
+        self.items = items
+        self.profile = profile
+        self.active_proxy = active_proxy
+        self.proxy_id = proxy_id
+        self.row = row
+        self.col = col
+
+        if active_proxy:
+            self.setCurrentIndex(self.proxy_id)
 
 
 class ProxyTable(Table):
@@ -262,16 +361,16 @@ class ProxyTable(Table):
 
     def set_items(self, data: Iterable[Iterable]):
         for i, proxy in enumerate(data):
-            checkbox = ProxyCheckBox(proxy[0], i)
+            checkbox = ProxyCheckBox(proxy[7], i)
             checkbox.clicked.connect(self.checkbox_clicked)
             self.setCellWidget(i, 0, checkbox)
-            self.setItem(i, 1, TableItem(proxy[1]))
-            self.setItem(i, 2, TableItem(proxy[2]))
-            self.setItem(i, 3, TableItem(proxy[3]))
-            self.setItem(i, 4, TableItem(proxy[4]))
-            self.setItem(i, 5, TableItem(proxy[5]))
-            self.setItem(i, 6, TableItem(proxy[6]))
-            self.setItem(i, 7, TableItem(proxy[7]))
+            self.setItem(i, 1, TableItem(proxy[0]))
+            self.setItem(i, 2, TableItem(proxy[1]))
+            self.setItem(i, 3, TableItem(proxy[2]))
+            self.setItem(i, 4, TableItem(proxy[3]))
+            self.setItem(i, 5, TableItem(proxy[4]))
+            self.setItem(i, 6, TableItem(proxy[5]))
+            self.setItem(i, 7, TableItem(proxy[6]))
 
     def update(self):
         proxies = []
@@ -294,6 +393,7 @@ class ProxyTable(Table):
                             ]
                         )
                     ),
+                    Proxy(proxy_model.server),
                 )
             )
         self.setRowCount(len(proxies))

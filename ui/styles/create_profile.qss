@@ -1,4 +1,0 @@
-QLineEdit, QComboBox, QComboBox QAbstractItemView {
-    border: 1px solid #d41bd4;
-    border-radius: 5px;
-}

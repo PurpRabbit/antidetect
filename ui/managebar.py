@@ -2,25 +2,12 @@ from PyQt6.QtWidgets import (
     QWidget,
     QPushButton,
     QHBoxLayout,
-    QVBoxLayout,
-    QDialog,
-    QLineEdit,
-    QComboBox,
-    QTextEdit,
 )
-from PyQt6.QtCore import QSize, QRect
+from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QIcon
 
 from ui.table import Table
 from ui.form import CreateProfileForm, CreateProxyForm
-from ui.settings import (
-    APP_WIDTH,
-    APP_HEIGHT,
-    SIDEBAR_WIDTH,
-    SIDEBAR_HEIGHT,
-    MANAGEBAR_HEIGHT,
-    MANAGEBAR_WIDTH,
-)
 from ui import icons
 
 

@@ -16,11 +16,9 @@ class SideBarButton(QPushButton):
 
     def set_active(self):
         self.setChecked(True)
-        self.setStyleSheet(utils.load_style_sheet("sidebar_button_active.qss"))
 
     def set_inactive(self):
         self.setChecked(False)
-        self.setStyleSheet(utils.load_style_sheet("sidebar_button_inactive.qss"))
 
 
 class Sidebar(QVBoxLayout):

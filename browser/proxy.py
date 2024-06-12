@@ -8,6 +8,7 @@ from sqlalchemy import update, delete, select
 
 from browser.models import ProxyModel
 from browser.manager import ObjectsManager
+from browser import exceptions
 from utils.paths import PROXIES_DIR, SETUP_DIR
 
 
@@ -21,8 +22,7 @@ class Proxy:
             server (str): The proxy server address in the format 'username:password@ip_address:port'.
         """
         self.server = server
-        self.pluginfile = "{}{}".format(PROXIES_DIR, self._get_proxy_name())
-
+        self.pluginfile = os.path.join(PROXIES_DIR, self._get_proxy_name())
         if not os.path.exists(self.pluginfile):
             self._build_proxy()
 
@@ -89,14 +89,14 @@ class Proxy:
         return hashlib.sha256(self.server.encode()).hexdigest() + ".zip"
 
     def _get_manifest(self) -> str:
-        with open(os.path.join(SETUP_DIR + "proxymanifest.json")) as fp:
+        with open(os.path.join(SETUP_DIR, "proxymanifest.json")) as fp:
             manifest = fp.read()
             return manifest
 
     def _get_background_js(
         self, username: str, password: str, address: str, port: int
     ) -> str:
-        with open(os.path.join(SETUP_DIR + "proxybackground.js")) as fp:
+        with open(os.path.join(SETUP_DIR, "proxybackground.js")) as fp:
             background = fp.read()
             return background % (address, port, username, password)
 
@@ -106,11 +106,33 @@ class Proxy:
             ":"
         ) + self.server.split("@")[1].split(":")
         with zipfile.ZipFile(self.pluginfile, "w") as zp:
-            zp.writestr("manifest.json", self._get_manifest)
+            zp.writestr("manifest.json", self._get_manifest())
             zp.writestr(
                 "background.js",
                 self._get_background_js(username, password, address, port),
             )
+
+    @staticmethod
+    def create(server: str) -> None:
+        """Add proxy to database"""
+        if Proxy.exists(server):
+            raise exceptions.ProxyExist
+
+        if not Proxy.valid_format(server):
+            raise exceptions.InvalidProxyFormat
+
+        new_proxy = ProxyModel(server=server)
+        ObjectsManager.create(new_proxy)
+
+    def delete(self):
+        """Delete proxy"""
+        if not Proxy.exists(self.server):
+            raise exceptions.ProxyDoesNotExist
+
+        stmt = delete(ProxyModel).where(ProxyModel.server == self.server)
+        ObjectsManager.delete(stmt)
+
+        os.remove(self.pluginfile)
 
     @staticmethod
     def get_ip(server: str) -> str:

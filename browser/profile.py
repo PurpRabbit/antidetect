@@ -181,6 +181,7 @@ class Profile:
             .where(self.model.name == self.name)
             .values(proxy_server=proxy_server)
         )
+        self.proxy_server = proxy_server
         ObjectsManager.update(stmt)
 
     def set_status(self, status: str) -> None:

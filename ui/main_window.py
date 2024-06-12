@@ -27,11 +27,9 @@ class MainWindow(QMainWindow):
         self.setWindowIcon(QIcon(icons.MAIN_WINDOW_PIC))
         self.setGeometry(500, 200, APP_WIDTH, APP_HEIGHT)
         self.setMinimumSize(APP_WIDTH, APP_HEIGHT)
-        self.setStyleSheet(utils.load_style_sheet("mainwindow.qss"))
 
         self.sidebar_widget = QWidget(self)
         self.sidebar_widget.setGeometry(0, 0, SIDEBAR_WIDTH, SIDEBAR_HEIGHT)
-        self.sidebar_widget.setStyleSheet(utils.load_style_sheet("sidebar.qss"))
 
         self.sidebar = Sidebar(self.sidebar_widget)
         self.sidebar.profiles_button.clicked.connect(self.set_profiles_active)

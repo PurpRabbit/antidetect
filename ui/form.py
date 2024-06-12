@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (
     QDialog,
     QLineEdit,
     QComboBox,
-    QTextEdit
+    QTextEdit,
 )
 
 from PyQt6.QtCore import QSize
@@ -15,6 +15,7 @@ from PyQt6.QtGui import QIcon
 
 from browser.useragent import user_agents
 from browser.profile import Profile
+from browser.proxy import Proxy
 from browser import exceptions
 from ui import utils, icons
 
@@ -24,7 +25,6 @@ class CreateProfileForm(QDialog):
         super().__init__(parent)
 
         self.setWindowTitle("Create profile")
-        self.setStyleSheet(utils.load_style_sheet("create_profile.qss"))
         self.setFixedSize(400, 110)
 
         self.profile_name = QLineEdit()
@@ -43,7 +43,6 @@ class CreateProfileForm(QDialog):
 
         self.refresh_user_agent_button = QPushButton(icon=QIcon(icons.REFRESH_ICON))
         self.refresh_user_agent_button.setIconSize(QSize(25, 25))
-        self.refresh_user_agent_button.setStyleSheet("""border: none;""")
         self.refresh_user_agent_button.clicked.connect(self.refresh_useragent)
 
         self.create_button = QPushButton(icon=QIcon(icons.CREATE_ICON), text="Create")
@@ -67,7 +66,6 @@ class CreateProfileForm(QDialog):
 
         self.refresh_useragent()
         self.show()
-        
 
     def create(self):
         name = self.profile_name.text().strip()
@@ -81,7 +79,7 @@ class CreateProfileForm(QDialog):
             profile.save()
         except exceptions.ProfileExists:
             return
-        
+
         self.parent().parent().table.update()
         self.close()
 
@@ -102,7 +100,9 @@ class CreateProxyForm(QDialog):
 
         self.info = QTextEdit()
         self.info.setReadOnly(True)
-        self.info.setText("Allowed format:\n    username:password@ip_address:port\nYou can add an unlimited number of proxies.\nPaste each proxy on a new line.\nIf the proxy does not match the format, it will not be added.")
+        self.info.setText(
+            "Allowed format:\n    username:password@ip_address:port\nYou can add an unlimited number of proxies.\nPaste each proxy on a new line.\nIf the proxy does not match the format, it will not be added."
+        )
 
         self.proxy_input = QTextEdit()
         create_button = QPushButton(QIcon(icons.CREATE_ICON), "Add")
@@ -117,3 +117,14 @@ class CreateProxyForm(QDialog):
         main_layout.addLayout(v_layout)
 
         self.show()
+
+    def create(self):
+        servers = self.proxy_input.toPlainText().split("\n")
+        for server in servers:
+            try:
+                Proxy.create(server)
+            except (exceptions.InvalidProxyFormat, exceptions.ProxyExist) as ex:
+                continue
+
+        self.parent().parent().table.update()
+        self.deleteLater()
