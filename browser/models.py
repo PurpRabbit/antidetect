@@ -30,3 +30,9 @@ class WalletModel(Base):
 
     id = Column("id", Integer, primary_key=True, autoincrement=True)
     private_key = Column("private_key", String(64), unique=True)
+
+
+class WebDriver(Base):
+    __tablename__ = "webdriver"
+    path = Column("path", String(512))
+    version = Column("version", String(32), primary_key=True)

@@ -3,7 +3,6 @@ from PyQt6.QtGui import QIcon
 from PyQt6.QtCore import QSize
 
 from ui import icons
-from ui import utils
 
 
 class SideBarButton(QPushButton):

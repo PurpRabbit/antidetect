@@ -12,23 +12,19 @@ import os
 import shutil
 import random
 from typing import overload
-from threading import Thread
 
 from sqlalchemy import update, delete, select
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.common import exceptions
-from webdriver_manager.chrome import ChromeDriverManager
 
 from browser.manager import ObjectsManager
 from browser.models import ProfileModel
 from browser.proxy import Proxy
 from browser.exceptions import ProfileDoesNotExist, ProfileExists
+from browser.driver import DriverManager
 from utils import paths
-
-
-WEBDRIVER = ChromeDriverManager().install()
 
 
 class Profile:
@@ -121,7 +117,7 @@ class Profile:
             "excludeSwitches", ["enable-automation", "enable-logging"]
         )
 
-        self.service = Service(WEBDRIVER)
+        self.service = Service(DriverManager().get_driver())
 
         if self.proxy_server:
             # Add proxy to profile
@@ -158,7 +154,10 @@ class Profile:
 
     def _delete_path(self) -> None:
         """Delete path related to profile"""
-        shutil.rmtree(os.path.join(paths.PROFILES_DIR, self.name))
+        try:
+            shutil.rmtree(os.path.join(paths.PROFILES_DIR, self.name))
+        except FileNotFoundError:
+            return
 
     def set_note(self, note: str) -> None:
         """Update profile note by profile name"""
@@ -169,7 +168,7 @@ class Profile:
         """Update profile proxy server by profile name"""
         if proxy_server is None:
             # If u dont remove this path, after u change proxy to None value,
-            # ur browser will be requiring for pass ang login for prev proxy
+            # ur browser will be requiring pass ang login for prev proxy
             secure_path = os.path.join(
                 paths.PROFILES_DIR, self.name, "Default", "Secure Preferences"
             )
